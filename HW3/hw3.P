@@ -1,0 +1,169 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%	Submitted by	: Jasmit Kaur Saluja
+%	SBU ID			: 110463904
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% hw3/2 is expected to take Input puzzle as list of lists,
+% generate solution and print the output row by row
+% R - InputListofLists
+% L - Output
+
+hw3(R, L) :-
+	% R is list of lists - the exact input
+	R = [[A1, A2, A3, A4, A5, A6],
+		 [B1, B2, B3, B4, B5, B6],
+		 [C1, C2, C3, C4, C5, C6],
+		 [D1, D2, D3, D4, D5, D6],
+		 [E1, E2, E3, E4, E5, E6],
+		 [F1, F2, F3, F4, F5, F6]],
+
+	% list of rows
+	RW1 = [A1, A2, A3, A4, A5, A6],
+	RW2 = [B1, B2, B3, B4, B5, B6],
+	RW3 = [C1, C2, C3, C4, C5, C6],
+	RW4 = [D1, D2, D3, D4, D5, D6],
+	RW5 = [E1, E2, E3, E4, E5, E6],
+	RW6 = [F1, F2, F3, F4, F5, F6],
+	
+	% list of columns
+	CL1 = [A1, B1, C1, D1, E1, F1],
+	CL2 = [A2, B2, C2, D2, E2, F2],
+	CL3 = [A3, B3, C3, D3, E3, F3],
+	CL4 = [A4, B4, C4, D4, E4, F4],
+	CL5 = [A5, B5, C5, D5, E5, F5],
+	CL6 = [A6, B6, C6, D6, E6, F6],
+	
+	% list of squares
+	SQ1 = [A1, A2, A3, B1, B2, B3],
+	SQ2 = [A4, A5, A6, B4, B5, B6],
+	SQ3 = [C1, C2, C3, D1, D2, D3],
+	SQ4 = [C4, C5, C6, D4, D5, D6],
+	SQ5 = [E1, E2, E3, F1, F2, F3],
+	SQ6 = [E4, E5, E6, F4, F5, F6],	
+	
+	% binded elements
+	BE11 = [A1, [RW1, CL1, SQ1]],
+	BE12 = [A2, [RW1, CL2, SQ1]],
+	BE13 = [A3, [RW1, CL3, SQ1]],
+	BE14 = [A4, [RW1, CL4, SQ2]],
+	BE15 = [A5, [RW1, CL5, SQ2]],
+	BE16 = [A6, [RW1, CL6, SQ2]],
+	
+	BE21 = [B1, [RW2, CL1, SQ1]],
+	BE22 = [B2, [RW2, CL2, SQ1]],
+	BE23 = [B3, [RW2, CL3, SQ1]],
+	BE24 = [B4, [RW2, CL4, SQ2]],
+	BE25 = [B5, [RW2, CL5, SQ2]],
+	BE26 = [B6, [RW2, CL6, SQ2]],
+	
+	BE31 = [C1, [RW3, CL1, SQ3]],
+	BE32 = [C2, [RW3, CL2, SQ3]],
+	BE33 = [C3, [RW3, CL3, SQ3]],
+	BE34 = [C4, [RW3, CL4, SQ4]],
+	BE35 = [C5, [RW3, CL5, SQ4]],
+	BE36 = [C6, [RW3, CL6, SQ4]],
+	
+	BE41 = [D1, [RW4, CL1, SQ3]],
+	BE42 = [D2, [RW4, CL2, SQ3]],
+	BE43 = [D3, [RW4, CL3, SQ3]],
+	BE44 = [D4, [RW4, CL4, SQ4]],
+	BE45 = [D5, [RW4, CL5, SQ4]],
+	BE46 = [D6, [RW4, CL6, SQ4]],
+	
+	BE51 = [E1, [RW5, CL1, SQ5]],
+	BE52 = [E2, [RW5, CL2, SQ5]],
+	BE53 = [E3, [RW5, CL3, SQ5]],
+	BE54 = [E4, [RW5, CL4, SQ6]],
+	BE55 = [E5, [RW5, CL5, SQ6]],
+	BE56 = [E6, [RW5, CL6, SQ6]],
+	
+	BE61 = [F1, [RW6, CL1, SQ5]],
+	BE62 = [F2, [RW6, CL2, SQ5]],
+	BE63 = [F3, [RW6, CL3, SQ5]],
+	BE64 = [F4, [RW6, CL4, SQ6]],
+	BE65 = [F5, [RW6, CL5, SQ6]],
+	BE66 = [F6, [RW6, CL6, SQ6]],
+	
+	% list of binded elements
+	BEL = [BE11, BE12, BE13, BE14, BE15, BE16,
+		   BE21, BE22, BE23, BE24, BE25, BE26,
+		   BE31, BE32, BE33, BE34, BE35, BE36,
+		   BE41, BE42, BE43, BE44, BE45, BE46,
+		   BE51, BE52, BE53, BE54, BE55, BE56, 
+		   BE61, BE62, BE63, BE64, BE65, BE66],
+	
+	bind_values(BEL),
+	L = R,
+	print_solution(R).
+  
+  
+%%%%%%%%%%%%%%%%%% helper functions %%%%%%%%%%%%%%%%%%
+
+% bind_values/1 takes a list of binded elements as input
+% binded element a list of lists in following format
+% [Element, [respective_row, respective_column, respective_square]]
+% it uses getval/1 to assign possible value to the Element
+bind_values([]).
+bind_values([H|T]) :-
+	H = [E, [_, _, _]],
+	var(E),
+	getval(H),
+	bind_values(T).
+bind_values([H|T]) :-
+	H = [E, [_, _, _]],
+	\+ var(E),
+	bind_values(T).
+
+
+% getval/1 takes one binded element as an input
+% picks a possible value for the Element
+% checks if that value is valid with respect to
+% Row, Column and Square constraints
+getval(X) :-
+	X = [E, [R, C, S]],
+	pick_val(V),
+	not_member(V, R),
+	not_member(V, C),
+	not_member(V, S),
+	E = V.
+
+% Values of an element should be in
+% range from 1 to 6
+pick_val(1).
+pick_val(2).
+pick_val(3).
+pick_val(4).
+pick_val(5).
+pick_val(6).
+
+
+% check if X is not a member of given list
+% it returns 'yes' if its not a member, 'no' otherwise
+not_member(_, []).
+not_member(X, [H|T]) :-
+	\+ var(H),
+	X \= H,
+	not_member(X, T).
+not_member(X, [H|_]) :-
+	\+ var(H),
+	X == H,
+	fail.
+not_member(X, [H|T]) :-
+	var(H),
+	not_member(X, T).
+
+
+% print solution in specified format
+print_solution([]).
+print_solution([H|T]) :-
+	print_list(H),
+	writeln(' '),
+	print_solution(T).
+	
+print_list([]).
+print_list([H|T]) :-
+	write(H),
+	write(' '),
+	print_list(T).

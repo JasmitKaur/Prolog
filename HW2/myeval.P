@@ -1,0 +1,119 @@
+% maxval finds the maximum value after the evaluation
+% of given tree. It checks for all the permutations of
+% operators using findall.
+
+maxval(T, L, V) :-
+	findall(V1, maxval_helper(T, L, V1), L1),
+	L1 = [H1|T1],
+	findmax(T1, H1, V),
+	!.
+
+maxval_helper(T, L, V) :-
+	permute(L, L1),
+	eval(T, L1, V).
+
+tree(X) :-
+	integer(X).
+
+tree(X, Y) :-
+	integer(X),
+	integer(Y).
+
+% To evaluate the value of tree
+eval(tree(X, Y), [H|_], V) :- 
+	integer(X),
+	integer(Y),
+	calc(X, Y, H, V).
+
+eval(tree(Left, Right), [H|T], V) :- 
+	integer(Right),
+	eval(Left, T, V1),
+	calc(V1, Right, H, V).
+
+eval(tree(Left, Right), [H|T], V) :- 
+	integer(Left),
+	eval(Right, T, V1),
+	calc(Left, V1, H, V).
+
+eval(tree(Left, Right), [H|T], V) :- 
+	split(T, Left, L1, Right, L2),
+	eval(Left, L1, V1),
+	eval(Right, L2, V2),
+	calc(V1, V2, H, V).
+
+	
+	
+%%%%%%%%%%%%%% helper functions %%%%%%%%%%%%%
+
+%calculate *, + or -
+calc(X, Y, 'mult', V) :-
+	V is X * Y.
+	
+calc(X, Y, 'plus', V) :-
+	V is X + Y.
+
+calc(X, Y, 'min', V) :-
+	V is X - Y.
+
+%delete
+delete([H|T], H, T).
+delete([H|T], X, [H|T2]) :-
+	delete(T, X, T2).
+	
+%permutation
+permute([], []).
+permute([H|T], L) :-
+	permute(T, L2),
+	delete(L, H, L2).
+	
+%count number of leaf nodes in tree i.e. number of integers in tree
+count_l(tree(X, Y), L) :-
+	integer(X),
+	integer(Y),
+	L is 2.
+
+count_l(tree(X, Y), L) :-
+	integer(X),
+	count_l(Y, L2),
+	L is L2 + 1.
+
+count_l(tree(X, Y), L) :-
+	integer(Y),
+	count_l(X, L1),
+	L is L1 + 1.
+
+count_l(tree(X, Y), L) :-
+	count_l(X, L1),
+	count_l(Y, L2),
+	L is L1 + L2.
+
+% split list of operators into 2 parts
+% on the basis of number of integers/leaf in
+% left and right subtree
+split(T, L, L1, R, L2) :-
+	count_l(L, C1),
+	count_l(R, C2),
+	N1 is C1 - 1,
+	N2 is C2 - 1,
+	split_put(T, N1, L1, N2, L2).
+
+split_put(_, 0, [], 0, []).
+
+split_put([H|T], N1, [H|L1], N2, L2) :-
+	N1 > 0,
+	N is N1 - 1,
+	split_put(T, N, L1, N2, L2).
+	
+split_put([H|T], N1, L1, N2, [H|L2]) :-
+	N2 > 0,
+	N is N2 - 1,
+	split_put(T, N1, L1, N, L2).	
+	
+	
+% find max value from a list
+findmax([], Max, Max).
+findmax([H|T], CurrentMax, Max) :-
+	H > CurrentMax,
+	findmax(T, H, Max).
+findmax([_|T], CurrentMax, Max) :-
+	findmax(T, CurrentMax, Max).

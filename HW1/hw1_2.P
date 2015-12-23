@@ -1,0 +1,145 @@
+% The approach is as follows:
+% Output is getting printed in row-by-row manner recursively.
+% Problem is divided in rows for even/odd input.
+% One row sub-problem is again divided in columns for odd/even inputs.
+
+% check if input is even or odd
+is_even(N) :-
+	integer(N),
+	R is mod(N, 2),
+	R = 0.
+
+is_odd(N) :-
+	integer(N),
+	R is mod(N, 2),
+	R \= 0.	
+
+% If N is even at any point, then do_even_row / do_even_col will be called
+do_even_row(N, Rth) :-
+	N > 1,
+	S is (2*N-1),
+	Rth > S,
+	!.
+
+do_even_row(N, Rth) :-
+	N > 1,
+	S is (2*N-1),
+	Rth =< S,
+	do_even_col(N, Rth, 1),
+	nl,
+	R1 is Rth + 1,
+	do_even_row(N, R1).
+	
+do_even_col(N, Rth, Cth) :-
+	N > 1,
+	S is (2*N -1),
+	Cth =< S,
+	( Rth = 1 ->
+		write('*'),
+		NextC is Cth+1
+	;
+		( Rth = S ->
+			write('*'),
+			NextC is Cth+1
+		;
+			( Cth = 1 ->
+				write(' '),
+				NextC is Cth+1
+			;
+				( Cth = S ->
+					write(' '),
+					NextC is Cth+1
+				;
+					N1 is N-1,
+					R1 is Rth-1,
+					C1 is Cth-1,
+					do_odd_col(N1, R1, C1),
+					Moves is (2*N1 - 1),
+					NextC is Cth+Moves
+				)
+			)
+		)
+	),
+	do_even_col(N, Rth, NextC).
+	
+do_even_col(N, Rth, Cth) :-
+	N>1,
+	S is (2*N-1),
+	Cth > S,
+	!.
+	
+do_even_col(0, _, _).
+
+% If N is odd at any point, then do_odd_row / do_odd_col will be called
+do_odd_row(N, Rth) :-
+	N > 1,
+	S is (2*N-1),
+	Rth > S,
+	!.
+
+do_odd_row(N, Rth) :-
+	N > 1,
+	S is (2*N-1),
+	Rth =< S,
+	do_odd_col(N, Rth, 1),
+	nl,
+	R1 is Rth + 1,
+	do_odd_row(N, R1).
+	
+do_odd_col(N, Rth, Cth) :-
+	N > 1,
+	S is (2*N -1),
+	Cth =< S,
+	( Cth = 1 ->
+		write('*'),
+		NextC is Cth+1
+	;
+		( Cth = S ->
+			write('*'),
+			NextC is Cth+1
+		;
+			( Rth = 1 ->
+				write(' '),
+				NextC is Cth+1
+			;
+				( Rth = S ->
+					write(' '),
+					NextC is Cth+1
+				;
+					N1 is N-1,
+					R1 is Rth-1,
+					C1 is Cth-1,
+					do_even_col(N1, R1, C1),
+					Moves is (2*N1 - 1),
+					NextC is Cth+Moves
+				)
+			)
+		)
+	),
+	do_odd_col(N, Rth, NextC).
+
+do_odd_col(N, Rth, Cth) :-
+	N>1,
+	S is (2*N-1),
+	Cth > S,
+	!.
+	
+do_odd_col(1, Rth, Cth) :-
+	Rth = 1,
+	Cth = 1,
+	write('*').
+	
+tartan(0).
+	
+tartan(1) :-
+	write('*').
+	
+tartan(N) :- 
+	is_even(N),
+	do_even_row(N, 1),
+	!.
+
+tartan(N) :- 
+	is_odd(N),
+	do_odd_row(N, 1),
+	!.

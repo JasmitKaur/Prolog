@@ -1,0 +1,449 @@
+:- import member/2 from basics.
+
+%length
+mylen([], 0).
+mylen([_|T], N) :-
+	mylen(T, N1),
+	N is N1+1.
+	
+%delete
+delete([H|T], H, T).
+delete([H|T], X, [H|T2]) :-
+	delete(T, X, T2).
+	
+%permutation
+permute([], []).
+permute([H|T], L) :-
+	permute(T, L2),
+	delete(L, H, L2).
+
+% append
+append([], L, L).
+append([H|T], R, [H|L]) :-
+	append(T, R, L).
+	
+% reverse/2
+reverse_2([], []).
+reverse_2([H|T], L) :-
+	reverse_2(T, L2),
+	append(L2, [H], L).
+	
+% reverse/3
+reverse_3([], L, L).
+reverse_3([H|T1], L2, R) :-
+	reverse_3(T1, [H|L2], R).
+	
+% tree traversal
+leaf(1).
+leaf(4).
+leaf(6).
+node(3, 1, 4).
+node(5, 3, 6).
+
+preorder(Root, [Root]) :-
+	leaf(Root).
+preorder(Root, [Root|L]) :-
+	node(Root, C1, C2),
+	preorder(C1, L1),
+	preorder(C2, L2),
+	append(L1, L2, L).
+
+postorder(Root, [Root]) :-
+	leaf(Root).
+postorder(Root, L) :-
+	node(Root, C1, C2),
+	postorder(C1, L1),
+	postorder(C2, L2),
+	append(L1, L2, I),
+	append(I, [Root], L).
+	
+inorder(Root, [Root]) :-
+	leaf(Root).
+inorder(Root, L) :-
+	node(Root, C1, C2),
+	inorder(C1, L1),
+	append(L1, [Root], I),
+	inorder(C2, L2),
+	append(I, L2, L).
+
+
+preorder_dl(Root, L, Tail) :-
+	node(Root, C1, C2),
+	L = [Root|L1],
+	preorder_dl(C1, L1, T1),
+	preorder_dl(C2, T1, Tail).
+preorder_dl(Root, [Root|Tail], Tail) :-
+	leaf(Root).
+preorderdl(Root, L) :-
+	preorder_dl(Root, L, []).
+
+
+postorder_dl(Root, L) :-
+	postorder_dl(Root, L, []).
+postorder_dl(Root, [Root|Tail], Tail) :-
+	leaf(Root).
+postorder_dl(Root, L, T) :-
+	node(Root, C1, C2),
+	postorder_dl(C1, L, T2),
+	postorder_dl(C2, T2, [Root|T]).
+	
+	
+inorder_dl(Root, L) :-
+	inorder_dl(Root, L, []).
+inorder_dl(Root, [Root|T], T) :-
+	leaf(Root).
+inorder_dl(Root, L, T) :-
+	node(Root, C1, C2),
+	inorder_dl(C1, L, [Root|T2]),
+	inorder_dl(C2, T2, T).
+
+
+preorder_dnl(Root, L) :-
+	preorder_d_l(Root, L-[]).
+preorder_d_l(Root, [Root|L]-T) :-
+	node(Root, C1, C2),
+	preorder_d_l(C1, L-T1),
+	preorder_d_l(C2, T1-T).
+preorder_d_l(Root, [Root|T]-T).		
+
+postorder_dnl(Root, L) :-
+	postorder_d_l(Root, L-[]).
+postorder_d_l(Root, L-T) :-
+	node(Root, C1, C2),
+	postorder_d_l(C1, L-T1),
+	postorder_d_l(C2, T1-[Root|T]).
+postorder_d_l(Root, [Root|T]-T).	
+
+
+inorder_dnl(Root, L) :-
+	inorder_d_l(Root, L-[]).
+inorder_d_l(Root, L-T) :-
+	node(Root, C1, C2),
+	inorder_d_l(C1, L-[Root|T2]),
+	inorder_d_l(C2, T2-T).
+inorder_d_l(Root, [Root|T]-T).
+	
+
+	
+	
+%%%%%%%% Quiz 1 %%%%%%%%%%%
+
+last([H], H).
+last([_|T], L) :-
+	last(T, L).
+	
+kth([H|_], 1, H).
+kth([_|L], N, X) :-
+	N>1,
+	N1 is N-1,
+	kth(L, N1, X).
+	
+palindrome(X) :-
+	reverse_3(X, _, X).
+
+
+flatten([], []).
+flatten([H|T], L) :-
+	!,
+	flatten(H, L1),
+	flatten(T, L2),
+	append(L1, L2, L).
+flatten(X, [X]).
+
+
+abc([], []).
+abc([H|T], [H|R]) :-
+	rem(H, T, T1),
+	abc(T1, R).
+
+rem(H, [H|L], L1) :-
+	rem(H, L, L1).
+rem(_, L, L).
+
+compress([], []).
+compress([H|T], [H|R]) :-
+	prefix_c(H, T, T1),
+	compress(T1, R).
+prefix_c(H, [H|L], L1) :-
+	!,
+	prefix_c(H, L, L1).
+prefix_c(_, L, L).
+
+
+pack([], []).
+pack([H|T], [Hs|Ts]) :-
+	prefix_p(H, [H|T], Hs, T1),
+	pack(T1, Ts).
+prefix_p(H, [H|T], [H|T1], T2) :-
+	!,
+	prefix_p(H, T, T1, T2).
+prefix_p(_, L, [], L).
+
+
+rle([], []).
+rle([H|T], [[C,H]|T1]) :-
+	count_rle(H, [H|T], C, L1),
+	rle(L1, T1).
+count_rle(H, [H|T], C, L) :-
+	!,
+	count_rle(H, T, C1, L),
+	C is C1 + 1.
+count_rle(_, L, 0, L).
+
+run_length(L, R) :-
+	pack(L, L1),
+	count_h(L1, R).
+count_h([], []).
+count_h([H|T], [(C,X)|T1]) :-
+	length(H, C),
+	H = [X|_],
+	count_h(T, T1).
+
+length([], 0).
+length([_|L], C) :-
+	length(L, C1),
+	C is C1+1.
+
+
+decode([], []).
+decode([(L,X)|T], R) :-
+	expand(L, X, T1),
+	decode(T, T2),
+	append(T1, T2, R).
+
+expand(0, _, []).
+expand(L, H, [H|R]) :-
+	L1 is L-1,
+	expand(L1, H, R).
+	
+range(X, X, [X]).
+range(X, Y, [X|L]) :-
+	X<Y,
+	X1 is X+1,
+	range(X1, Y, L).
+range(X, Y, []) :-
+	X>Y.
+	
+
+%%%%%%% Arithmetic Operations %%%%%%
+isPrime(2).
+isPrime(N) :-
+	isPrime(2, N).
+isPrime(X, N) :-
+	N2 is sqrt(N),
+	X > N2,
+	!.
+isPrime(X, N) :-
+	0 is N mod X,
+	!,
+	fail.
+isPrime(X, N) :-
+	X1 is X+1,
+	isPrime(X1, N).
+
+
+genPrimes(N, L) :-
+	checkPrimes(2, N, L).
+checkPrimes(X, N, []) :-
+	X>N,
+	!.
+checkPrimes(X, N, [X|T]) :-
+	isPrime(X),
+	!,
+	X2 is X+1,
+	checkPrimes(X2, N, T).
+checkPrimes(X, N, T) :-
+	X2 is X+1,
+	checkPrimes(X2, N, T).
+
+
+%%%%%%%%%% Difference List %%%%%%%%%%%%%
+
+append_dl(X-T1, T1-Y, X-Y).
+
+add(L1-T1, N, L1-T2) :-
+	T1 = [N|T2];
+
+add2(L1-[N|T2], N, L1-T2).
+
+
+
+palindrome1(X) :-
+	pali(X-[]).
+
+pali(A-A).
+pali([_|A]-A).
+
+pali([A|B]-D) :-
+	pali(B-[A|D]).
+
+
+	
+%%%%%%%%% Sorting %%%%%%%%%%
+
+quicksort([], []).
+
+quicksort([H|T], Res) :-
+	partition(H, T, Lf, Rt),
+	quicksort(Lf, L1),
+	quicksort(Rt, L2),
+	append(L1, [H|L2], Res).
+
+partition(_, [], [], []).
+
+partition(Pivot, [H|T], [H|L1], L2) :-
+	H=<Pivot,
+	partition(Pivot, T, L1, L2).
+
+partition(Pivot, [H|T], L1, [H|L2]) :-
+	H>Pivot,
+	partition(Pivot, T, L1, L2).
+
+
+
+	
+quick2(L, R) :-
+	quicksort_dl(L, R-[]).
+	
+quicksort_dl([], Y-Y).
+	
+quicksort_dl([H|T], R-T1) :-
+	partition(H, T, Lf, Rt),
+	quicksort_dl(Lf, R-[H|T2]),
+	quicksort_dl(Rt, T2-T1).
+
+
+
+% selection
+sel_sort([H|T], R) :-
+	sel_sort_h([H|T], 0, R).
+
+sel_sort_h(R, I, R) :-
+	length(R, L),
+	I>L.
+
+sel_sort_h([H|T], I, R) :-
+	find_smallest([H|T], I, X),
+	swap(I, X),
+	I1 is I+1,
+	sel_sort_h(T, I1, R).
+	
+
+% flatten
+my_flatten([], []).
+my_flatten([H|T], L):-
+	!,
+	my_flatten(H, L1),
+	my_flatten(T, L2),
+	append(L1, L2, L).
+my_flatten(X, [X]).
+% positioning of this last rule makes a difference
+
+
+% append
+append([], L, L).
+append([H|T], L, [H|R]) :-
+	append(T, L, R).
+	
+% eliminate
+ECD([], []).
+EDC([H|T], [H|T2]) :-
+	EDC(T, T2),
+	prefix(H, )
+
+	
+	
+% group
+group([], []).
+group([H|T], [Hs|Ts]) :-
+	prefix(H, [H|T], Hs, T1),
+	group(T1, Ts).
+	
+prefix(H, [H|T], [H|T2], T3) :-
+	!,
+	prefix(H, T, T2, T3).
+prefix(_H, L, [], L).
+
+
+% pack
+pack(L, L2) :-
+	group(L, L1),
+	helper(L1, L2).
+helper([], []).
+helper([H|T], [(L, X)|R]) :- 
+	length(H, L),
+	H = [X|_],
+	helper(T, R).
+length([], 0).
+length([_|T], N) :-
+	length(T, N1),
+	N is N1+1.
+	
+% decoding
+decode([], []).
+decode([(L, X)|T], R) :-
+	expand(L, X, L2),
+	decode(T, L3),
+	append(L2, L3, R).
+expand(0, _X, []) :-
+	!.
+expand(N, X, [X|T]) :-
+	N1 is N-1,
+	expand(N1, X, T).
+	
+	
+	
+% range
+% it has a corner case that X>Y
+range(X, X, [X]) :-
+	!.
+range(X, Y, [X|T]) :-
+	X1 is X+1,
+	range(X1, Y, T).
+
+	
+OR
+range2(X, X, [X]).
+range2(X, Y, [X|T]) :-
+	X<Y,
+	X1 is X+1,
+	range(X1, Y, T).
+range2(X, Y, []) :-
+	X>Y.
+	
+	
+	
+	
+%%%%%%%%%%%%%%%%%% Arithmetic predicate %%%%%%%%%%%%%%
+isPrime(2).
+isPrime(N) :-
+	isPrime(2, N).
+isPrime(X, N) :-
+	N2 is sqrt(N),
+	N2<X,
+	!.
+%isPrime(X, N) :-
+%	D is N//X,
+%	N is D*X,
+%	!,
+%	fail.
+isPrime(X, N) :-
+	0 is N mod X,
+	!,
+	fail.
+isPrime(X, N) :-
+	X2 is X+1,
+	isPrime(X2, N).
+	
+	
+%%%%% generate prime no in range %%%%%%%%
+genP(N, L) :-
+	range(2, N, L1),
+	checkPrime(L1, L).
+checkPrime([], []).
+checkPrime([H|T], [H|T2]) :-
+	isPrime(H),
+	!,
+	checkPrime(T, T2).
+checkPrime([_|T], T2) :-
+	checkPrime(T, T2).

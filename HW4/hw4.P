@@ -1,0 +1,269 @@
+% resolution of given clauses and a query
+% assuming that query has one literal
+% Input: InputFileName, OutputFileName
+%		 Input file has a list of clauses and a query
+% 		 One clause per line.
+% Output: List of resolutions in output file
+%		 First line shows 'Success',
+%		 if resolution produces 'empty, clause
+%		 'Cannot be solved' otherwise
+
+:- import member/2 from basics.
+:- import select/3 from basics.
+:- import append/3 from basics.
+
+hw4(Input, Output) :-
+	see(Input),
+	read_disjunctions(L),
+	flattenClauses(L, L1, Count),
+	Count1 is Count + 1,
+	resolve(L1, Count1, R),
+	processResult(R, Result),
+	tell(Output),
+	write_result(Result),
+	seen,
+	told.
+
+
+%%%%%%%%%%%%%%%%%%%%%%% helper functions %%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%	processResult	%%%%%%%%
+% process the result list to generate
+% output in required format
+processResult([], []).
+processResult([H|T], [Hr|R]) :-
+	H = resolution(A, B, X, C),
+	changeRepresentation(X, Y),
+	Hr = resolution(A, B, Y, C),
+	processResult(T, R).
+processResult([H|T], [H1|R]) :-
+	H \= myClause(_, _),
+	changeRepresentation(H, H1),
+	processResult(T, R).
+processResult([H|T], R) :-
+	H = myClause(_, _),
+	processResult(T, R).
+
+
+%%%%%%%%	changeRepresentation	%%%%%%%%
+% changes the representation from list to functor
+% eg: [a1, a2] => or(a1, a2)
+changeRepresentation([], 'empty').
+changeRepresentation([H], H).
+changeRepresentation(X, Y) :-
+	getLast(X, Last),
+	select(Last, X, R1),
+	changeRepresentation(R1, R2),
+	Y = or(R2, Last).
+
+
+%%%%%%%%	read_disjunctions	%%%%%%%%
+% read predicates and query recursively
+read_disjunctions([H|T]) :-
+	read(H),
+	H \= end_of_file,
+	!,
+	read_disjunctions(T).
+read_disjunctions([]).
+
+
+%%%%%%%%	write_result	%%%%%%%%
+% write result to the output file
+write_result([]).
+write_result([H|T]) :-
+	write(H),
+	write(.),
+	nl,
+	write_result(T).
+
+
+%%%%%%%%	resolve		%%%%%%%%
+% perform resolution
+resolve(L, Count, R) :-
+	getLast(L, Last),
+	findPairofLast(L, Last, Pair),
+	Pair \= [],
+	resolve2clauses(Last, Pair, Count, R1),
+	R1 = resolution(_, _, X, _),
+	X \= [],
+	append(L, [R1], R2),
+	Count1 is Count + 1,
+	resolve(R2, Count1, R).
+
+resolve(L, _, [Error|R]) :-
+	getLast(L, Last),
+	findPairofLast(L, Last, Pair),
+	Pair = [],
+	Error = ['Cannot be solved'],
+	R = L.
+	
+resolve(L, Count, [Success|R]) :-
+	getLast(L, Last),
+	findPairofLast(L, Last, Pair),
+	Pair \= [],
+	resolve2clauses(Last, Pair, Count, R1),
+	R1 = resolution(_, _, X, _),
+	X = [],
+	append(L, [R1], R),
+	Success = ['Success'].
+
+
+%%%%%%%%	getLast		%%%%%%%%	
+% get last element from the list of clauses
+getLast([H], H).
+getLast([_|T], L) :-
+	getLast(T, L).
+
+
+%%%%%%%%	findPairofLast	%%%%%%%%
+% find possible pair of clause for the last clause
+% from the given list of clauses
+findPairofLast([], _, []).
+findPairofLast([H|_], Last, H) :-
+	H = myClause(_, L1),
+	Last = myClause(_, L2),
+	isPair(L2, L1),
+	!.
+findPairofLast([H|T], Last, Pair) :-
+	H = myClause(_, L1),
+	Last = myClause(_, L2),
+	\+ isPair(L2, L1),
+	findPairofLast(T, Last, Pair).
+	
+findPairofLast([H|_], Last, H) :-
+	H = myClause(_, L1),
+	Last = resolution(_, _, L2, _),
+	isPair(L2, L1),
+	!.
+findPairofLast([H|T], Last, Pair) :-
+	H = myClause(_, L1),
+	Last = resolution(_, _, L2, _),
+	\+ isPair(L2, L1),
+	findPairofLast(T, Last, Pair).
+
+findPairofLast([H|_], Last, H) :-
+	H = resolution(_, _, L1, _),
+	Last = resolution(_, _, L2, _),
+	isPair(L2, L1),
+	!.
+findPairofLast([H|T], Last, Pair) :-
+	H = resolution(_, _, L1, _),
+	Last = resolution(_, _, L2, _),
+	\+ isPair(L2, L1),
+	findPairofLast(T, Last, Pair).
+
+
+%%%%%%%%	isPair	%%%%%%%%
+% isPair returns true, if negation of one
+% element of List1 exists in L2, false otherwise
+isPair([], _) :-
+	false.
+isPair([H|_], L) :-
+	H = neg(X),
+	member(X, L),
+	true.
+isPair([H|_], L) :-
+	H \= neg(_),
+	member(neg(H), L),
+	true.
+isPair([H|T], L) :-
+	H = neg(X),
+	\+ member(X, L),
+	isPair(T, L).
+isPair([H|T], L) :-
+	H \= neg(_),
+	\+ member(neg(H), L),
+	isPair(T, L).
+
+
+%%%%%%%%	flattenClauses	%%%%%%%%
+% flattenClauses converts
+% myClause(1, or(a1, a2)) => myClause(1, [a1, a2])
+% for simplicity of resolution
+% also it gives the count of clauses
+flattenClauses([], [], 0).
+flattenClauses([H1|T1], [H2|T2], Count) :-
+	H1 = myClause(X, S1),
+	simplify(S1, S2),
+	H2 = myClause(X, S2),
+	flattenClauses(T1, T2, Count1),
+	Count is Count1 + 1.
+flattenClauses([H1|T1], [H2|T2], Count) :-
+	H1 = myQuery(X, S1),
+	simplifyNeg(neg(S1), S2),
+	H2 = myClause(X, S2),
+	flattenClauses(T1, T2, Count1),
+	Count is Count1 + 1.
+
+
+%%%%%%%%	simplifyNeg		%%%%%%%%
+% to simplifyNegation
+% this is for query
+simplifyNeg(L, [R]) :-
+	L = neg(neg(R)).
+simplifyNeg(L, [L]) :-
+	L = neg(_).
+
+
+%%%%%%%%	simplify	%%%%%%%%
+% converts or(a1, a2) => [a1, a2]
+simplify(neg(X), [neg(X)]).
+simplify(S, [S]) :-
+	atom(S).
+simplify(S1, S2) :-
+	S1 = or(X, Y),
+	simplify(X, L1),
+	simplify(Y, L2),
+	append(L1, L2, S2).
+
+
+%%%%%%%%	resolve2clauses		%%%%%%%%
+% resolves a pair of clause by applying rule
+resolve2clauses(L1, L2, Count, R) :-
+	L1 = myClause(X, S1),
+	L2 = myClause(Y, S2),
+	applyRule(S1, S2, T),
+	R = resolution(X, Y, T, Count),
+	!.
+
+resolve2clauses(L1, L2, Count, R) :-
+	L1 = myClause(X, S1),
+	L2 = resolution(_, _, S2, Y),
+	applyRule(S1, S2, T),
+	R = resolution(X, Y, T, Count),
+	!.
+
+resolve2clauses(L1, L2, Count, R) :-
+	L1 = resolution(_, _, S1, X),
+	L2 = myClause(Y, S2),
+	applyRule(S1, S2, T),
+	R = resolution(X, Y, T, Count),
+	!.
+
+resolve2clauses(L1, L2, Count, R) :-
+	L1 = resolution(_, _, S1, X),
+	L2 = resolution(_, _, S2, Y),
+	applyRule(S1, S2, T),
+	R = resolution(X, Y, T, Count),
+	!.
+
+
+%%%%%%%%	applyRule	%%%%%%%%
+% applies resolution rule
+applyRule([], [], []).
+applyRule(L1, L2, R) :-
+	select(X, L1, R1),
+	select(Y, L2, R2),
+	(X = neg(Y); Y = neg(X)),
+	union(R1, R2, R).
+
+
+%%%%%%%%	union	%%%%%%%%
+% union of two sets
+union([], U, U).
+union([H|T], L, [H|R]) :-
+   \+ member(H, L),
+   union(T, L, R).
+union([H|T], L, R) :-
+   member(H, L),
+   union(T, L, R).

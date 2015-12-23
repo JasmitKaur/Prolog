@@ -1,0 +1,256 @@
+% The approach is as follows:
+% Output is getting printed in row-by-row manner recursively.
+% Problem is divided in rows for even/odd input.
+% One row sub-problem is again divided in columns for odd/even inputs.
+ 
+lace(N) :-
+	N > 0,
+	even(N),
+	do_even_lace_row(N, 1).
+	
+lace(N) :-
+	N > 0,
+	odd(N),
+	do_odd_lace_row(N, 1).
+
+% check if input is even or odd
+even(N) :-
+	integer(N),
+	R is mod(N, 2),
+	R = 0.
+
+odd(N) :-
+	integer(N),
+	R is mod(N, 2),
+	R \= 0.
+
+% To calculate the number of rows/columns for given N
+rows(1, 3).
+
+rows(N, X) :-
+	N > 1,
+	even(N),
+	N1 is N-1,
+	rows(N1, X1),
+	X is (2*X1 - 1).
+
+rows(N, X) :-
+	N > 1,
+	odd(N),
+	N1 is N-1,
+	rows(N1, X1),
+	X is X1.
+
+% If N is even at any point, then do_even_lace_row / do_even_lace_col will be called
+do_even_lace_col(0, Rth, Cth) :-
+	write(' ').
+	
+do_even_lace_col(N, Rth, Cth) :-
+	N > 0,
+	rows(N, R),
+	Cth > R,
+	!.
+	
+do_even_lace_col(N, Rth, Cth) :-
+	N > 0,
+	rows(N, R),
+	Center is (R+1)/2,
+	Cth =< R,
+	( Rth >= 1, I1 is (Center+1)/2, Rth < I1 ->
+		( I2 is (Center-Rth+1), Cth =:= I2 ->
+			write('*'),
+			NextC is Cth+1
+		;
+			( I3 is (Center+Rth-1), Cth =:= I3 ->
+				write('*'),
+				NextC is Cth+1
+			;
+				( T is (Center+Rth-1), Cth < T ->
+					write(' '),
+					NextC is Cth+1
+				;
+					NextC is Cth+1
+				)
+			)
+		)
+	;
+		( I4 is (Center+1)/2, Rth >= I4, I5 is (Center + ((Center-1)/2)), Rth =< I5 ->
+			( Cth >= I4, Cth =< I5 ->
+				N1 is N-1,
+				InitialR is Rth-((Center-1)/2),
+				InitialC is Cth-((Center-1)/2),
+				do_odd_lace_col(N1, InitialR, InitialC),
+				rows(N1, R1),
+				NextC is Cth+R1
+			;
+				( Rth =< Center ->
+					( I6 is (Center-Rth+1), Cth =:= I6 ->
+						write('*'),
+						NextC is Cth+1
+					;
+						( I7 is (Center+Rth-1), Cth =:= I7 ->
+							write('*'),
+							NextC is Cth+1
+						;
+							( T is (Center+Rth-1), Cth < T ->
+								write(' '),
+								NextC is Cth+1
+							;
+								NextC is Cth+1
+							)
+						)
+					)
+				;
+					( I6 is (Rth-Center+1), Cth =:= I6 ->
+						write('*'),
+						NextC is Cth+1
+					;
+						( I7 is (Center+R-Rth), Cth =:= I7 ->
+							write('*'),
+							NextC is Cth+1
+						;
+							( T is (Center+R-Rth), Cth < T ->
+								write(' '),
+								NextC is Cth+1
+							;
+								NextC is Cth+1
+							)
+						)
+					)
+				)
+			)
+			
+		;
+			( I8 is (Center + ((Center-1)/2)), Rth > I8, Rth =< R ->
+				( I9 is (Rth-Center+1), Cth =:= I9 ->
+					write('*'),
+					NextC is Cth+1
+				;
+					( I10 is (Center+R-Rth), Cth =:= I10 ->
+						write('*'),
+						NextC is Cth+1
+					;
+						( T is (Center+R-Rth), Cth < T ->
+							write(' '),
+							NextC is Cth+1
+						;
+							NextC is Cth+1
+						)
+					)
+				)
+			)
+		)
+	),
+	do_even_lace_col(N, Rth, NextC).
+	
+	
+do_even_lace_row(N, Rth) :-
+	N > 0,
+	rows(N, R),
+	Rth > R,
+	!.
+
+do_even_lace_row(N, Rth) :-
+	N > 0,
+	rows(N, R),
+	Rth =< R,
+	do_even_lace_col(N, Rth, 1),
+	nl,
+	R1 is Rth+1,
+	do_even_lace_row(N, R1).
+	
+% If N is odd at any point, then do_odd_lace_row / do_odd_lace_col will be called
+do_odd_lace_col(N, Rth, Cth) :-
+	N > 0,
+	rows(N, R),
+	Cth > R,
+	!.
+	
+do_odd_lace_col(N, Rth, Cth) :-
+	N > 0,
+	rows(N, R),
+	Center is (R+1)/2,
+	Cth =< R,
+	( Rth =< Center ->
+		( Rth =:= 1 ->
+			write('*'),
+			INC is 1
+		;
+			( Cth =:= 1 ->
+				write('*'),
+				INC is 1
+			;
+				( Cth =:= R ->
+					write('*'),
+					INC is 1
+				;
+					( Cth > 1, I9 is (Center-Rth+1), Cth < I9 ->
+						write(' '),
+						INC is 1
+					;
+						( Cth < R, I10 is (Center+Rth-1), Cth > I10 ->
+							write(' '),
+							INC is 1
+						;
+							N1 is N-1,
+							do_even_lace_col(N1, Rth, Cth),
+							( N1 > 0 ->
+								INC is (2*Rth - 1)
+							;
+								INC is 1
+							)
+						)
+					)
+				)
+			)
+		)
+	;	
+		( Rth =:= R ->
+			write('*'),
+			INC is 1
+		;
+			( Cth =:= 1 ->
+				write('*'),
+				INC is 1
+			;
+				( Cth =:= R ->
+					write('*'),
+					INC is 1
+				;
+					( Cth > 1, I11 is (Rth-Center+1), Cth < I11 ->
+						write(' '),
+						INC is 1
+					;
+						( Cth < R, I12 is (Center+R-Rth), Cth > I12 ->
+							write(' '),
+							INC is 1
+						;
+							N1 is N-1,
+							do_even_lace_col(N1, Rth, Cth),
+							Temp is R-Rth+1,
+							INC is (2*Temp)-1
+						)
+					)
+				)
+			)
+		)	
+	),
+	NextC is Cth+INC,
+	do_odd_lace_col(N, Rth, NextC).
+	
+do_odd_lace_row(N, Rth) :-
+	N > 0,
+	rows(N, R),
+	Rth > R,
+	!.
+
+do_odd_lace_row(N, Rth) :-
+	N > 0,
+	rows(N, R),
+	Rth =< R,
+	do_odd_lace_col(N, Rth, 1),
+	nl,
+	R1 is Rth+1,
+	do_odd_lace_row(N, R1).
+	
+	

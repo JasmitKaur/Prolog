@@ -1,0 +1,90 @@
+% maximalpleasure make all possible pairs of journey
+% and make a list of pleasure values.
+% returns max pleasure value
+
+maximalpleasure(L, T, N, V) :-
+	makepairs(L, L1),
+	maximalpleasure_h(L1, T, N, Lv),
+	Lv = [H1|T1],
+	findmax(T1, H1, V),
+	!.
+
+% healper function for maximalpleasure
+% which picks up one pair and pass it for
+% comparison of journey
+maximalpleasure_h([], _, _, []).
+maximalpleasure_h(L, T, N, [V|Lv]) :-
+	L = [H1|T1],
+	H1 = [journey(_,A), journey(_,B)],
+	compare(A, B, T, N, V),
+	maximalpleasure_h(T1, T, N, Lv).
+
+% compares 2 journey and calculate pleasure points
+% according to rule
+compare([], _, _, _, 0).
+compare(_, [], _, _, 0).
+compare([H1,H2|T1], [H1,H2|T2], T, N, V) :-
+	compare([H2|T1], [H2|T2], T, N, V1),
+	V is V1 + (2*T + 2*N),
+	!.
+compare([H1|T1], [H1|T2], T, N, V) :-
+	compare(T1, T2, T, N, V1),
+	V is V1 + (2*N),
+	!.
+compare([H1|T1], [H2|T2], T, N, V) :-
+	H1 \= H2,
+	compare(T1, T2, T, N, V),
+	!.	
+
+%%%%%%%% Helper functions %%%%%%%%%%%%
+
+% append
+append([], L, L).
+append([H|T], R, [H|L]) :-
+	append(T, R, L).
+
+% To make pairs from given list of journies
+makepairs([], []).
+makepairs([_], []).
+makepairs([H|T], L) :-
+	cartesian(H, T, L1),
+	makepairs(T, L2),
+	append(L1, L2, L),
+	!.
+
+cartesian(_, [], []).
+cartesian(H, [H1|T1], L) :-
+	H = journey(X, _),
+	H1 = journey(Y, _),
+	X \= Y,
+	cartesian(H, T1, L1),
+	L = [[H, H1]|L1],
+	!.
+cartesian(H, [H1|T1], L) :-
+	H = journey(X, _),
+	H1 = journey(X, _),
+	cartesian(H, T1, L),
+	!.
+
+% find max value from a list
+findmax([], Max, Max).
+findmax([H|T], CurrentMax, Max) :-
+	H > CurrentMax,
+	findmax(T, H, Max).
+findmax([_|T], CurrentMax, Max) :-
+	findmax(T, CurrentMax, Max).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

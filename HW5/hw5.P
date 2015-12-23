@@ -1,0 +1,74 @@
+% This program is to find least model of the given
+% propositional definite program P
+
+:- import select/3 from basics.
+:- import member/2 from basics.
+
+% propositions finds the list L of all propositions
+% in the given propositional program P
+propositions([], []).
+propositions([rule(A,_)|T], [A|L]) :-
+	propositions(T, L).
+
+% tp finds a list M2 such that M2 is the immediate
+% consequence of the propositional program P with
+% respect to M1: i.e. M2 = TP(M1).
+tp([], _, []).
+tp(P, M1, M2) :-
+	find_tp(P, M1, M),
+	sort(M, M2).
+
+% leastmodel finds the least model of the given
+% propositional definite program P
+leastmodel(P, M) :-
+	leastmodel_h(P, [], M).
+
+% leastmodel_h is a helper function of leastmodel
+leastmodel_h(P, M, F) :-
+	tp(P, M, R1),
+	union(M, R1, R2),
+	length(M, L1),
+	length(R2, L2),
+	L1 \= L2,
+	leastmodel_h(P, R2, F).
+
+leastmodel_h(P, M, M) :-
+	tp(P, M, R1),
+	union(M, R1, R2),
+	length(M, L1),
+	length(R2, L2),
+	L1 = L2.
+
+%%%%%%%%%%%%%%%%%%%% Helper functions %%%%%%%%%%%%%%%%%%%%%
+
+% to find subsets of a given set
+subset([], []).
+subset([H|T1], [H|T2]) :-
+	subset(T1, T2).
+subset([_|T1], T2) :-
+	subset(T1, T2).
+
+% to find tp using semi-naive evaluation
+find_tp([], _, []).
+find_tp([rule(A,X)|T], M1, L) :-
+	subset(M1, X),
+	find_tp(T, M1, L2),
+	union([A], L2, L).
+find_tp([rule(_,X)|T], M1, L) :-
+	\+ subset(M1, X),
+	find_tp(T, M1, L).
+
+% union of 2 sets
+union([], L, L).
+union([H|T], L, [H|R]) :-
+	\+ member(H, L),
+	!,
+	union(T, L, R).
+union([_|T], L, R) :-
+	union(T, L, R).
+
+% length of a list
+length([], 0).
+length([_|T], L) :-
+	length(T, L1),
+	L is L1 + 1.
